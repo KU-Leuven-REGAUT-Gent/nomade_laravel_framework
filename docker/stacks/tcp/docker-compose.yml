@@ -1,0 +1,23 @@
+version: '3.7'
+
+services:
+  tcp-nomade:
+    container_name: tcp-nomade
+    build: ./../build
+    restart: unless-stopped
+    ports:
+      - 20002:20002
+    environment:
+      - DB_HOST=172.17.0.1
+      - DB_PORT=3306
+      - DB_NAME=nomade
+      - DB_USER=$DB_NOMADE_USERNAME
+      - DB_PASS=$DB_NOMADE_PASSWORD
+      - TCP_PORT=20002
+    #networks:
+    #  - db
+    volumes:
+      - ./../code:/var/www/html
+    cap_add:
+      - NET_ADMIN
+    command: [ "php", "./tcp.php" ]

@@ -1,0 +1,76 @@
+version: "3.7"
+
+services:
+  php:
+    container_name: nomade-php
+    restart: always
+    image: laravel-php
+    volumes:
+      - source:/app
+      - storage:/app/storage
+    environment:
+       - APP_NAME="NOMADe"
+       - APP_REALM="NOMADe"
+       - APP_URL="https://nomade.$DOMAINNAME"
+       - APP_DEV_URL="https://dev-nomade.$DOMAINNAME"
+       - APP_DEBUG=false
+       - DB_HOST=172.17.0.1
+       - DB_PORT=3306
+       - DB_DATABASE=$DB_NOMADE_DATABASE
+       - DB_USERNAME=$DB_NOMADE_USERNAME
+       - DB_PASSWORD=$DB_NOMADE_PASSWORD
+    networks:
+       - backend
+
+  nginx:
+    container_name: nomade-nginx
+    restart: always
+    image: laravel-nginx
+    volumes:
+      - source:/app
+      - storage:/app/storage
+    depends_on:
+      - php
+    networks:
+      - backend
+      - web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web"
+
+      - "traefik.http.routers.nomade.entrypoints=websecure"
+      - "traefik.http.routers.nomade.rule=Host(`nomade.${DOMAINNAME}`)"
+      - "traefik.http.routers.nomade.tls.certResolver=tls"
+      - "traefik.http.routers.nomade.service=nomade"
+
+      - "traefik.http.services.nomade.loadbalancer.server.port=80"
+
+  composer:
+    container_name: nomade-composer
+    image: laravel-composer
+    volumes:
+      - source:/app
+      - storage:/app/storage
+    working_dir: /app
+
+  node:
+    container_name: nomade-node
+    image: laravel-node
+    volumes:
+      - source:/app
+      - storage:/app/storage
+    working_dir: /app
+
+volumes:
+  source:
+    name: nomade-source
+  storage:
+    name: nomade-storage
+
+networks:
+  backend:
+    name: nomade-backend
+  web:
+    external: true
+
+

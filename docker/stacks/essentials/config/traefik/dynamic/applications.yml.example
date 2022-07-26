@@ -1,0 +1,21 @@
+http:
+  routers:
+    educat:
+      rule: "PathPrefix(`/educat/`)"
+      service: "hostweb"
+    dev-educat:
+      rule: "PathPrefix(`/dev-educat/`)"
+      service: "hostweb"
+    api:
+      rule: "PathPrefix(`/traefik/`)"
+      service: api@internal
+
+
+
+
+http:
+  services:
+    hostweb:
+      loadBalancer:
+        servers:
+          - url: "http://172.17.0.1:8080"

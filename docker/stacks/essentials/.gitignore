@@ -1,0 +1,7 @@
+# Ignore Python cache
+__pycache__
+
+# Ignore all config files
+/config/pihole/internal.list
+/config/traefik/users.htpasswd
+/config/traefik/dynamic/applications.yml

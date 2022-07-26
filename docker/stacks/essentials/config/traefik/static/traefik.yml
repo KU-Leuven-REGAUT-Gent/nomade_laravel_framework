@@ -1,0 +1,24 @@
+api:
+  insecure: true
+  dashboard: true
+log:
+  level: debug
+providers:
+  docker:
+    watch: true
+    exposedByDefault: false
+    network: web
+  file:
+    directory: /dynconf/
+    watch: true
+
+entryPoints:
+  web:
+    address: :80
+    http:
+      redirections:
+        entrypoint:
+          to: websecure
+          scheme: https
+  websecure:
+    address: :443

@@ -1,0 +1,67 @@
+version: '3.7'
+
+services:
+  telegraf:
+    container_name: telegraf
+    image: telegraf
+    environment:
+      - HOST_PROC=/host/proc
+    privileged: true
+    network_mode: host
+    volumes:
+      - /proc:/host/proc:ro
+      - ./config/telegraf/telegraf.conf:/etc/telegraf/telegraf.conf
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/run/utmp:/var/run/utmp
+
+  influxdb:
+    container_name: influxdb
+    image: influxdb
+    ports:
+      - "8086:8086"
+    networks:
+      - backend
+    environment:
+      INFLUXDB_DB: ${INFLUXDB_DATABASE}
+      INFLUXDB_USER: ${INFLUXDB_USERNAME}
+      INFLUXDB_USER_PASSWORD: ${INFLUXDB_PASSWORD}
+    volumes:
+      - ./config/influxdb/influxdb.conf:/etc/influxdb/influxdb.conf
+      - influxdb-data:/var/lib/influxdb
+
+  grafana:
+    container_name: grafana
+    image: grafana/grafana
+    user: "root"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GF_SECURITY_ADMIN_USER}
+      GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD}
+    networks:
+      - web
+      - backend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./config/grafana/datasource.yaml:/etc/grafana/provisioning/datasources/datasource.yaml
+      - ./config/grafana/dashboard.yaml:/etc/grafana/provisioning/dashboards/dashboard.yaml
+      - ./config/grafana/dashboards/:/var/lib/grafana/dashboards/
+      - grafana-data:/var/lib/grafana
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web"
+
+      - "traefik.http.routers.grafana.entrypoints=websecure"
+      - "traefik.http.routers.grafana.rule=Host(`grafana.${DOMAINNAME}`)"
+      - "traefik.http.routers.grafana.tls.certResolver=tls"
+      - "traefik.http.routers.grafana.service=grafana"
+
+      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+
+networks:
+  web:
+    external: true
+  backend:
+
+volumes:
+  influxdb-data:
+  grafana-data:

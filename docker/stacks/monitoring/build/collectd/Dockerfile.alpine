@@ -1,0 +1,33 @@
+FROM alpine
+
+RUN apk update
+RUN apk add autoconf \
+            automake \
+            bison \
+            flex \
+            gcc \
+            g++ \
+            git \
+            libtool \
+            make \
+            pkgconfig
+
+WORKDIR /usr/src
+RUN git clone https://github.com/collectd/collectd.git
+WORKDIR /usr/src/collectd
+RUN ./build.sh
+RUN ./configure \
+    --prefix=/usr \
+    --sysconfdir=/etc/collectd \
+    --disable-dependency-tracking \
+    --without-libstatgrab \
+    --without-included-ltdl \
+    --disable-static
+RUN make all
+RUN make install
+RUN make clean
+ADD collectd.conf /etc/collectd/
+ADD entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]

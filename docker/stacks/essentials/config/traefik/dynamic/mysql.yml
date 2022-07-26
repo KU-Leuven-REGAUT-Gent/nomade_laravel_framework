@@ -1,0 +1,21 @@
+http:
+  routers:
+    https-redirect:
+      entryPoints: 
+        - "database"
+      rule: "HostSNI(`*`)"
+      service: "database"
+
+http:
+  middlewares:
+   https-redirect:
+      redirectScheme:
+        scheme: https
+        permanent: true
+
+http:
+  services:
+    database:
+      loadBalancer:
+        servers:
+          - url: "172.17.0.1:3306/"

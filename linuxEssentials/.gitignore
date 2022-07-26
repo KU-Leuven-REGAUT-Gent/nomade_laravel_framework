@@ -1,0 +1,5 @@
+# Ignore mkcert installation folder
+/mkcert
+
+# Ignore TLS certificates
+*.pem

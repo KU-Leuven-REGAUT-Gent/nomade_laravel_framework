@@ -1,0 +1,3 @@
+[submodule "code/classes"]
+	path = code/classes
+	url = https://github.com/fredericdepuydt/php-libraries.git

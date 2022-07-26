@@ -1,0 +1,58 @@
+
+version: "3.7"
+
+services:
+  php:
+    container_name: dev-nomade-php
+    restart: always
+    image: laravel-php
+    volumes:
+      - ./../../01.source:/app
+      - storage:/app/storage
+    environment:
+       - PGID="$PGID"
+       - PUID="$PUID"
+       - APP_NAME="NOMADe (Development Branch)"
+       - APP_REALM="NOMADe"
+       - APP_URL="https://dev-nomade.$DOMAINNAME"
+       - APP_DEV_URL="https://dev-nomade.$DOMAINNAME"
+       - DB_HOST=172.17.0.1
+       - DB_PORT=3306
+       - DB_DATABASE=$DB_NOMADE_DATABASE
+       - DB_USERNAME=$DB_NOMADE_USERNAME
+       - DB_PASSWORD=$DB_NOMADE_PASSWORD
+    networks:
+       - backend
+
+  nginx:
+    container_name: dev-nomade-nginx
+    restart: always
+    image: laravel-nginx
+    volumes:
+      - ./../../01.source:/app
+      - storage:/app/storage
+    depends_on:
+      - php
+    networks:
+      - backend
+      - web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web"
+
+      - "traefik.http.routers.dev-nomade.entrypoints=websecure"
+      - "traefik.http.routers.dev-nomade.rule=Host(`dev-nomade.${DOMAINNAME}`)"
+      - "traefik.http.routers.dev-nomade.tls=true"
+      - "traefik.http.routers.dev-nomade.service=dev-nomade"
+
+      - "traefik.http.services.dev-nomade.loadbalancer.server.port=80"
+
+volumes:
+  storage:
+    name: dev-nomade-storage
+
+networks:
+  backend:
+    name: dev-nomade-backend
+  web:
+    external: true

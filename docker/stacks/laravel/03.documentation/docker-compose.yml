@@ -1,0 +1,53 @@
+version: "3.7"
+
+services:
+  nginx:
+    container_name: documentation-nginx
+    restart: always
+    image: nginx
+    volumes:
+      - ./nginx:/usr/share/nginx/html:ro
+    networks:
+      - web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web"
+
+      - "traefik.http.routers.documentation.entrypoints=web,websecure"
+      - "traefik.http.routers.documentation.rule=Host(`documentation.${DOMAINNAME}`)"
+      #- "traefik.http.routers.documentation.tls.certResolver=tls"
+      - "traefik.http.routers.documentation.service=documentation"
+
+      - "traefik.http.services.documentation.loadbalancer.server.port=80"
+
+  phpdoc:
+    container_name: documentation-phpdoc
+    restart: "no"
+    image: laravel-phpdoc
+    volumes:
+    - ./../01.source:/var/code
+    - ./nginx/phpdoc:/var/output
+    working_dir: /opt/phpdoc
+    command: run -d /var/code -t /var/output
+
+  newman:
+    container_name: documentation-newman
+    restart: "no"
+    image: laravel-newman
+    volumes:
+      - ./newman:/etc/newman/input/
+      - ./nginx/newman:/etc/newman/output/
+    # Template License and copyright notice: https://github.com/MarcosEllys/awesome-newman-html-template
+    command: >
+      run input/collection.json
+      --delay-request 1000
+      --reporters cli,json,html
+      --reporter-json-export output/collection.json
+      --reporter-html-export output/index.html
+      --reporter-html-template input/htmlreqres.hbs
+
+networks:
+  web:
+    external: true
+
+

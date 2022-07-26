@@ -1,0 +1,28 @@
+################################################################
+## HTTP to HTTPS
+################################################################
+
+http:
+  routers:
+    https-redirect:
+      entryPoints: 
+        - "web"
+      middlewares:
+        - "https-redirect"
+      rule: "PathPrefix(`/`)"
+      service: "https-redirect"
+      priority: 1
+
+http:
+  middlewares:
+   https-redirect:
+      redirectScheme:
+        scheme: https
+        permanent: true
+
+http:
+  services:
+    https-redirect:
+      loadBalancer:
+        servers:
+          - url: "http://localhost/"

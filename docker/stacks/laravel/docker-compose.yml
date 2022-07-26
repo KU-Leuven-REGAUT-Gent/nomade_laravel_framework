@@ -1,0 +1,60 @@
+version: "3.7"
+
+services:
+  php:
+    build:
+      context: ./02.build/php
+    image: laravel-php
+    env_file: .env
+    volumes:
+      - ./01.source:/app
+
+  nginx:
+    build:
+      context: ./02.build/nginx
+    image: laravel-nginx
+    env_file: .env
+
+  composer:
+    build:
+      context: ./02.build/composer
+    image: laravel-composer
+    env_file: .env
+    volumes:
+      - ./01.source:/app
+
+  node:
+    # image: node:latest
+    # container_name: laravel-node
+    # volumes:
+    #   - ./01.source:/app
+    # working_dir: /app
+    image: "node:16-buster"
+    user: "node"
+    working_dir: /app
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - ./01.source:/app
+    command: bash -c "sudo npm install && npm install cross-env && npm run dev"
+
+  #   build:
+  #     args:
+  #       -uid: "1000"
+  #     context: ./02.build/node
+  #   image: laravel-node
+  #   env_file: .env
+  #   volumes:
+  #     - ./01.source:/app
+  #     - /node_modules
+  # phpdoc:
+  #   build:
+  #     context: ./02.build/phpdoc
+  #   image: laravel-phpdoc
+  #   env_file: .env
+
+  # newman:
+  #   build:
+  #     context: ./02.build/newman
+  #   image: laravel-newman
+  #   env_file: .env

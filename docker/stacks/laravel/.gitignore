@@ -1,0 +1,3 @@
+### Exclude Backup ###
+99.backup
+.env

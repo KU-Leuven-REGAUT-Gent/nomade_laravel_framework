@@ -1,0 +1,10 @@
+# ~/.bash_env: executed by .bashrc
+
+# Applying environment variables from .env file
+if [ -f ~/.env ]; then
+    export $(grep -v '^#' ~/.env | xargs)
+fi
+
+# setting the User ID and Group ID (Mostly for usage with Docker)
+export PUID="$(id -u)"
+export PGID="$(id -g)"

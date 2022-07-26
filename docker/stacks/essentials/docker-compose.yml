@@ -1,0 +1,120 @@
+version: '3.7'
+
+services:
+  traefik:
+    container_name: traefik
+    image: traefik
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 443:443
+      - 8080:8080
+    networks:
+      - web
+      - dns
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # static and dynamic config files
+      - ./config/traefik/static/traefik.yml:/etc/traefik/traefik.yml
+      - ./config/traefik/dynamic/:/dynconf/
+      # TLS certificates
+      - /mnt/usb/certs/cert.pem:/certs/fullchain.pem
+      - /mnt/usb/certs/key.pem:/certs/privkey.pem
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.middlewares.traefik-redirect.redirectregex.regex=^http://([^/]+)/(|dashboard)$$"
+      - "traefik.http.middlewares.traefik-redirect.redirectregex.replacement=http://$${1}/dashboard/"
+      - "traefik.http.middlewares.traefik-redirect.redirectregex.permanent=true"
+
+      - "traefik.http.routers.traefik.rule=Host(`traefik.${DOMAINNAME}`)"
+      - "traefik.http.routers.traefik.middlewares=traefik-redirect@docker,auth"
+      - "traefik.http.routers.traefik.service=api@internal"
+      - "traefik.http.routers.traefik.entrypoints=websecure"
+      - "traefik.http.routers.traefik.tls=true"
+
+      - "traefik.http.services.traefik.loadbalancer.server.port=8083"
+      # echo $(htpasswd -nb user password) | sed -e s/\\$/\\$\\$/g
+
+      - "traefik.http.middlewares.auth.basicauth.users=${traefikAuth}"
+
+  pihole:
+    # More info at https://github.com/pi-hole/docker-pi-hole/ and https://docs.pi-hole.net/
+    container_name: pihole
+    image: pihole/pihole:v5.8
+    restart: always
+    networks:
+      web:
+      # pihole-net:
+      #   ipv4_address: 10.0.0.3
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "8082:80/tcp"
+      # - "67:67/udp" ONLY REQUIRED FOR DHCP
+    environment:
+      - TZ='Europe/Brussels'
+      - IPv6=false
+      - DNS1=1.1.1.1
+      - DNS2=0.0.0.1
+      #- PROXY_LOCATION=${SERVER_IP}
+      #- VIRTUAL_HOST=pihole.${DOMAINNAME}
+      #- VIRTUAL_PORT=80
+      - WEBPASSWORD=PiHole
+    volumes:
+      - ./config/pihole/internal.conf:/etc/dnsmasq.d/02-internal.conf
+      - ./config/pihole/internal.list:/etc/pihole/internal.list
+    # dns:
+    #   - 1.1.1.1
+    #   - 1.0.0.1
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web"
+
+      - "traefik.http.middlewares.pihole-redirect.redirectregex.regex=^https://([^/]+)/(|admin)$$"
+      - "traefik.http.middlewares.pihole-redirect.redirectregex.replacement=https://$${1}/admin/"
+      - "traefik.http.middlewares.pihole-redirect.redirectregex.permanent=true"
+
+      - "traefik.http.routers.pihole.entrypoints=websecure"
+      - "traefik.http.routers.pihole.rule=Host(`pihole.${DOMAINNAME}`)"
+      - "traefik.http.routers.pihole.middlewares=pihole-redirect@docker"
+      - "traefik.http.routers.pihole.service=pihole-loadBalancer"
+      - "traefik.http.services.pihole-loadBalancer.loadbalancer.server.port=80"
+      - "traefik.http.routers.pihole.tls=true"
+
+  portainer:
+    container_name: portainer
+    image: portainer/portainer
+    # command: -H unix:///var/run/docker.sock --admin-password '${PORTAINER_PASSWORD_HASH}'
+    restart: unless-stopped
+    networks:
+      - web
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer-data:/data
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web"
+
+      - "traefik.http.routers.portainer.entrypoints=websecure"
+      - "traefik.http.routers.portainer.rule=Host(`portainer.${DOMAINNAME}`)"
+      - "traefik.http.routers.portainer.tls=true"
+      - "traefik.http.routers.portainer.service=portainer"
+      - "traefik.http.services.portainer.loadbalancer.server.port=9000"
+
+networks:
+  web:
+    external: true
+  dns:
+    external: true
+
+volumes:
+  portainer-data:
+    name: portainer-data
