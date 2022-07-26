@@ -23,6 +23,10 @@ from echo import echo
 # Create env files.
 command.exec("touch .env");
 command.exec("cp -r 01.source/.env.example 01.source/.env")
+command.exec("mkdir 01.source/storage")
+command.exec("mkdir 01.source/storage/app && mkdir 01.source/storage/framework && mkdir 01.source/storage/logs")
+command.exec("mkdir 01.source/storage/framework/cache && mkdir 01.source/storage/framework/sessions && mkdir 01.source/storage/framework/views")
+
 
 # Install libseccomp2_2.5.1 to solve problem with building the images
 command.exec("wget https://ftp.debian.org/debian/pool/main/libs/libseccomp/libseccomp2_2.5.1-1~bpo10+1_armhf.deb")
