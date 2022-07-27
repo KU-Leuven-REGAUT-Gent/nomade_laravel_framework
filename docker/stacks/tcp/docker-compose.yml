@@ -3,7 +3,7 @@ version: '3.7'
 services:
   tcp-nomade:
     container_name: tcp-nomade
-    build: ./../build
+    build: ./build
     restart: unless-stopped
     ports:
       - 20002:20002
