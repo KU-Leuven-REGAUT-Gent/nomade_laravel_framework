@@ -17,7 +17,7 @@ services:
     #networks:
     #  - db
     volumes:
-      - ./../code:/var/www/html
+      - ./code:/var/www/html
     cap_add:
       - NET_ADMIN
     command: [ "php", "./tcp.php" ]
