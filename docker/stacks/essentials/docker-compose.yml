@@ -58,8 +58,8 @@ services:
     environment:
       - TZ='Europe/Brussels'
       - IPv6=false
-      - DNS1=1.1.1.1
-      - DNS2=1.0.0.1
+      - DNS1=8.8.8.8
+      - DNS2=8.8.4.4
       #- PROXY_LOCATION=${SERVER_IP}
       #- VIRTUAL_HOST=pihole.${DOMAINNAME}
       #- VIRTUAL_PORT=80
