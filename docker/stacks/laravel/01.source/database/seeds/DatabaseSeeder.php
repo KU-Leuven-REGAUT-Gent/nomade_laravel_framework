@@ -57,7 +57,7 @@ class DatabaseSeeder extends Seeder
         $this->call(Seed\Nomade\InstrumentTypeParameterTableSeeder::class);
         $this->call(Seed\Nomade\InstrumentsTableSeeder::class);
         $this->call(Seed\Nomade\InstrumentParameterTableSeeder::class);     
-        $this->call(Seed\Nomade\measurementCategoriesTableSeeder::class); 
+        $this->call(Seed\Nomade\MeasurementCategoriesTableSeeder::class); 
     }
 
 }
